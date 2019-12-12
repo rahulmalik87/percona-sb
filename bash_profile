@@ -65,7 +65,7 @@ elif [ "res_only" = $1 ]; then
 elif [ "bkp_res" = $1 ]; then
  n bkp && n kill && n copy_src &&  n prep && n res
 elif [ "make" = $1 ]; then
- cd $HOME/MySQL/src_$BX && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf ../$BX && rm -rf bld && mkdir bld && cd bld && cmake $CMK -DCMAKE_INSTALL_PREFIX=~/MySQL/$BX .. && make -j7 && make install
+ cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CMK -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && make -j7 && make install
 else
     sandbox $1
 fi
@@ -175,19 +175,19 @@ function sandbox() {
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
     export XT_COMMAND=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --keyring-file-data=$SRC_DATADIR/key.key"
-    export MYSQLD_OPTION=" --log-error-verbosity=3 --debug-sync-timeout=1000 --core-file --early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --keyring_file_data=$DATADIR/key.key"
-    export SRC=$HOME/MySQL/src_$BX
+    export MYSQLD_OPTION=" --log-error-verbosity=3 --core-file --early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --keyring_file_data=$DATADIR/key.key --debug-sync-timeout=1000"
+    export SRC=$HOME/MySQL/src/$BX
     export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DWITHOUT_TOKUDB=OFF -DWITH_DEBUG=on -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
     alias cdd='cd $DATADIR'
     alias cdl='cd $LOGDIR'
     alias cds='cd $SRC'
-    alias cdm='cd ~/MySQL/$BX'
-    alias bo='cd ~/pquery && git clean -fdx && cmake -DBASEDIR=$HOME/MySQL/$BX -DMYSQL=ON . && make -j && cdp && ctags -R';
-    alias bp='cd ~/pquery && git clean -fdx && cmake -DBASEDIR=$HOME/MySQL/$BX -DPERCONASERVER=ON . && make -j && cdp && ctags -R';
-    alias cdsm='cd ~/MySQL/src_$BX'
+    alias cdm='cd ~/MySQL/build/$BX'
+    alias bo='cd ~/pquery && git clean -fdx && cmake -DBASEDIR=$HOME/MySQL/build/$BX -DMYSQL=ON . && make -j && cdp && ctags -R';
+    alias bp='cd ~/pquery && git clean -fdx && cmake -DBASEDIR=$HOME/MySQL/build/$BX -DPERCONASERVER=ON . && make -j && cdp && ctags -R';
+    alias cdsm='cd ~/MySQL/src/$BX'
     alias cqa='cd ~/MySQL/percona-qa'
     alias cdsx='cd $SRC/storage/innobase/xtrabackup'
-    alias cdbl='cd $HOME/MySQL/src_$BX/bld'
+    alias cdbl='cd $HOME/MySQL/src/$BX/bld'
     alias gc='git clean -fdx'
     alias gp='git pull'
     alias lscp='git diff --cached > /tmp/1.patch && scp /tmp/1.patch $QA20:/tmp'
@@ -197,24 +197,24 @@ function sandbox() {
 
      #opition based on mysql version 5.7 or 8.0
     if [ $ver = "7" ] ; then
-      export MYSQL_HOME=$HOME/MySQL/$BX
+      export MYSQL_HOME=$HOME/MySQL/build/$BX
       export MYSQL=$MYSQL_HOME/bin/mysql
       export MYSQLD=$MYSQL_HOME/bin/mysqld
-      export XTRABACKUP=$HOME/MySQL/src_$BX/bld/storage/innobase/xtrabackup/src/xtrabackup
-      export XTRABACKUP_BASEDIR=$HOME/MySQL/src_$BX/bld/storage/innobase/xtrabackup/src
+      export XTRABACKUP=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/xtrabackup
+      export XTRABACKUP_BASEDIR=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src
       MYSQLD_OPTION=$MYSQLD_OPTION" --basedir=$MYSQL_HOME"
-      XT_COMMAND=$XTRABACKUP$XT_COMMAND" --xtrabackup-plugin-dir=$HOME/MySQL/src_$BX/bld/storage/innobase/xtrabackup/src/keyring"
-      alias dt='$HOME/MySQL/o7/bin/mysql  --socket $SOCKET -uroot test'
-      alias cdb='$HOME/MySQL/o7/bin/mysql  --socket $SOCKET -uroot -e "create database test;"'
+      XT_COMMAND=$XTRABACKUP$XT_COMMAND" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/keyring"
+      alias dt='$HOME/MySQL/build/o7/bin/mysql  --socket $SOCKET -uroot test'
+      alias cdb='$HOME/MySQL/build/o7/bin/mysql  --socket $SOCKET -uroot -e "create database test;"'
     else
-      export MYSQL_HOME=$HOME/MySQL/src_$BX/bld/runtime_output_directory
+      export MYSQL_HOME=$HOME/MySQL/src/$BX/bld/runtime_output_directory
       export MYSQL=$MYSQL_HOME/mysql
       export MYSQLD=$MYSQL_HOME/mysqld
       export XTRABACKUP=$MYSQL_HOME/xtrabackup
-      MYSQLD_OPTION=$MYSQLD_OPTION" --loose_mysqlx_port=$PORT --loose_mysqlx_socket=/tmp/mysqx_`expr $PORT - 50`.sock  --loose_mysqlx_port=`expr $PORT - 50` --basedir=$MYSQL_HOME --plugin-dir=$HOME/MySQL/src_$BX/bld/plugin_output_directory "
-      XT_COMMAND=$XTRABACKUP$XT_COMMAND" --xtrabackup-plugin-dir=$HOME/MySQL/src_$BX/bld/plugin_output_directory"
-      alias dt='$HOME/MySQL/o8/bin/mysql  --socket $SOCKET -uroot test'
-      alias cdb='$HOME/MySQL/o8/bin/mysql  --socket $SOCKET -uroot -e "create database test;"'
+      MYSQLD_OPTION=$MYSQLD_OPTION" --loose_mysqlx_port=$PORT --loose_mysqlx_socket=/tmp/mysqx_`expr $PORT - 50`.sock  --loose_mysqlx_port=`expr $PORT - 50` --basedir=$MYSQL_HOME --plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory "
+      XT_COMMAND=$XTRABACKUP$XT_COMMAND" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory"
+      alias dt='$HOME/MySQL/build/o8/bin/mysql  --socket $SOCKET -uroot test'
+      alias cdb='$HOME/MySQL/build/o8/bin/mysql  --socket $SOCKET -uroot -e "create database test;"'
     fi
 
     if [ -z $BBX ] ; then
