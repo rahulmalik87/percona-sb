@@ -8,7 +8,7 @@ alias gs='git status'
 alias cdp='cd ~/pquery/src'
 
 #sandboxes default is o7 ; o for oracle-mysql , p for perocna-server , x xtrabackup
-N_HELP="pick one of the box by o7|o8|o81|p7|p2|xp7|xo7|xo71 \nst: start server \ninit: initialize server \nclean : clean data and logdir\ncon: connect the server\nmkdir: make log and data directory\nbkp: to bkp xtrab backup using $BX sandbox \nprep : prepare backp \nres : restore backup\nbkp_res backup prepare and restore"
+N_HELP="pick one of the box by o7|o8|o81|p7|p2|xp7|xo7|xo71 \nst: start server \ninit: initialize server \nclean : clean data and logdir\ncon: connect the server\nmkdir: make log and data directory\nbkp: to bkp xtrab backup using $BX sandbox \nprep : prepare backp \nres : restore backup\nbkp_res backup prepare and restore\n\nmodify CMK for CMAKE build\nXT_COMANND to modify XTRABCKUP option\nMYSQLD_OPTION to modify mysqld options"
 alias ll='ls -ltr'
 n() {
 if [ -z $1 ]; then
@@ -65,7 +65,15 @@ elif [ "res_only" = $1 ]; then
 elif [ "bkp_res" = $1 ]; then
  n bkp && n kill && n copy_src &&  n prep && n res
 elif [ "make" = $1 ]; then
- cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CMK -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && make -j7 && make install
+ if [ -z $2 ]; then
+  CPK=$CMK
+ elif [ $2 = "debug" ]; then
+  CPK=$CMK" -DWITH_DEBUG=on"
+ else
+  echo "wrong choice; use debug";
+  return;
+ fi
+ cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && make -j7 && make install
 else
     sandbox $1
 fi
@@ -175,9 +183,9 @@ function sandbox() {
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
     export XT_COMMAND=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --keyring-file-data=$SRC_DATADIR/key.key"
-    export MYSQLD_OPTION=" --log-error-verbosity=3 --core-file --early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --keyring_file_data=$DATADIR/key.key --debug-sync-timeout=1000"
+    export MYSQLD_OPTION=" --log-error-verbosity=3 --core-file --early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000"
     export SRC=$HOME/MySQL/src/$BX
-    export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DWITHOUT_TOKUDB=OFF -DWITH_DEBUG=on -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
+    export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DWITHOUT_TOKUDB=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
     alias cdd='cd $DATADIR'
     alias cdl='cd $LOGDIR'
     alias cds='cd $SRC'
