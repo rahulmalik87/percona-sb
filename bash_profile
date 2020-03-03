@@ -1,6 +1,6 @@
 
 BX=""
-BBX=""
+BBX="" #if set means, running with backup directory:w
 PORT=""
 #global alias
 alias csc='cdsm && cscope -i ./cscope.files'
@@ -42,15 +42,14 @@ elif [ "bkp" = $1 ]; then
  grep "completed OK!" $LOGDIR/backup_$BX.log -c
 elif [ "inc" = $1 ]; then
  mv $DATADIR $DATADIR"_bkp"
- $XT_COMMAND --backup --incremental-basedir=$DATADIR"_bkp" 2>&1| tee $LOGDIR/increment_$BX.log
- grep "completed OK!" $LOGDIR/increment_$BX.log -c
+ $XT_COMMAND --backup --incremental-basedir=$DATADIR"_bkp" | tee $LOGDIR/increment_$BX.log
+ grep "completed OK!" $LOGDIR/backup_$BX.log -c
 elif [ "prep_again" = $1 ]; then
  rm -r $HOME/MySQL/data/$BOX
  unzip $LOGDIR/bkp.zip -d $HOME/MySQL/data
  $XT_COMMAND --prepare 2>&1 | tee $LOGDIR/prepare_$BX.log
  grep "completed OK!" $LOGDIR/prepare_$BX.log -c
 elif [ "prep" = $1 ]; then
-
  #if it is increment backup"
  if [ -d $DATADIR"_bkp" ]; then
   mv $DATADIR $DATADIR"_inc"
@@ -58,12 +57,12 @@ elif [ "prep" = $1 ]; then
   mv $LOGDIR/inc.zip $LOGDIR/inc_old.zip
   mv $DATADIR"_bkp" $DATADIR
   cd $HOME/MySQL/data && zip -r $LOGDIR/inc.zip $BOX"_inc" #copy source data directory
-  fi
+ fi
  #backup of backup directory
-  rm $LOGDIR/bkp_old.zip
-  mv $LOGDIR/bkp.zip $LOGDIR/bkp_old.zip
-  cd $HOME/MySQL/data && zip -r $LOGDIR/bkp.zip $BOX #copy source data directory
-  $XT_COMMAND --prepare --apply-log-only 2>&1 | tee $LOGDIR/prepare_base$BX.log
+ rm $LOGDIR/bkp_old.zip
+ mv $LOGDIR/bkp.zip $LOGDIR/bkp_old.zip
+ cd $HOME/MySQL/data && zip -r $LOGDIR/bkp.zip $BOX #copy source data directory
+ $XT_COMMAND --prepare --apply-log-only 2>&1 | tee $LOGDIR/prepare_base$BX.log
  grep "completed OK!" $LOGDIR/prepare_base$BX.log -c
 elif [ "prep_inc" = $1 ]; then
  $XT_COMMAND --prepare --incremental-dir=$DATADIR"_inc"  2>&1 | tee $LOGDIR/prepare_inc$BX.log
@@ -80,7 +79,7 @@ elif [ "res_only" = $1 ]; then
  $XT_COMMAND --copy-back --datadir=$SRC_DATADIR 2>&1 | tee $LOGDIR/restore_$BX.log
  cp $LOGDIR/key.key $SRC_DATADIR
 elif [ "bkp_res" = $1 ]; then
- n bkp && n kill && n copy_src &&  n prep && n res
+ n bkp && n inc && n kill && n copy_src && n prep && n prep_inc && n res
 elif [ "make" = $1 ]; then
  if [ -z $2 ]; then
   CPK=$CMK
@@ -90,10 +89,7 @@ elif [ "make" = $1 ]; then
   echo "wrong choice; use debug";
   return;
  fi
- cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld
- cmake $CPK -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. | tee $LOGDIR/cmake.log
- make -j7 | tee $LOGDIR/make.log
- make install | tee $LOGDIR/install.log
+ cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && make -j7 && make install
 else
     sandbox $1
 fi
@@ -114,7 +110,7 @@ export ctags='/usr/local/Cellar/ctags/5.8_1/bin/ctags'
 #path for openssl
 export LDFLAGS="-L/usr/local/opt/openssl/lib"
 export CPPFLAGS="-I/usr/local/opt/openssl/include"
-export PATH="/usr/local/opt/openssl/bin:$PATH"export PATH="/usr/local/opt/openssl/bin:$PATH"
+export PATH="/usr/local/opt/openssl/bin:$PATH"
 alias rscp='scp $QA20:/tmp/1.patch /tmp/1.patch && patch -p1 < /tmp/1.patch'
 export QA06='rahul.malik@10.30.6.206'
 export QA09='rahul.malik@10.30.6.209'
@@ -245,10 +241,17 @@ function sandbox() {
       alias cdb='$HOME/MySQL/build/o8/bin/mysql  --socket $SOCKET -uroot -e "create database test;"'
     fi
 
+    #options based on PXB
     if [ -z $BBX ] ; then
 	export PS1="{\[\e[32m\]\h\[\e[m\]\[\e[36m\] $BX \[\e[m\]\W}$"
     else
 	export PS1="{\[\e[32m\]\h\[\e[m\]\[\e[36m\] $BX $BBX \[\e[m\]\W}$"
+        export PATH=$PATH":$HOME/MySQL/build/$BX/bin"
+	if [ $ver = "7" ] ; then
+	 alias cdt='cd $HOME/MySQL/build/$BX/xtrabackup-test'
+        else 
+	 alias cdt='cd $HOME/MySQL/build/$BX/xtrabackup-test/test'
+	fi
     fi;
     n mkdir
 }
