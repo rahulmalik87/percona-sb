@@ -36,21 +36,38 @@ elif [ "kill" = $1 ]; then
 elif [ "con" = $1 ]; then
  $MYSQL --socket $SOCKET -uroot
 elif [ "bkp" = $1 ]; then
- rm -r $DATADIR
+ rm -r $DATADIR*
  mkdir $DATADIR
  $XT_COMMAND --backup 2>&1 | tee $LOGDIR/backup_$BX.log
  grep "completed OK!" $LOGDIR/backup_$BX.log -c
+elif [ "inc" = $1 ]; then
+ mv $DATADIR $DATADIR"_bkp"
+ $XT_COMMAND --backup --incremental-basedir=$DATADIR"_bkp" 2>&1| tee $LOGDIR/increment_$BX.log
+ grep "completed OK!" $LOGDIR/increment_$BX.log -c
 elif [ "prep_again" = $1 ]; then
  rm -r $HOME/MySQL/data/$BOX
  unzip $LOGDIR/bkp.zip -d $HOME/MySQL/data
  $XT_COMMAND --prepare 2>&1 | tee $LOGDIR/prepare_$BX.log
  grep "completed OK!" $LOGDIR/prepare_$BX.log -c
 elif [ "prep" = $1 ]; then
- rm $LOGDIR/bkp_old.zip
- mv $LOGDIR/bkp.zip $LOGDIR/bkp_old.zip
- cd $HOME/MySQL/data && zip -r $LOGDIR/bkp.zip $BOX #copy source data directory
- $XT_COMMAND --prepare 2>&1 | tee $LOGDIR/prepare_$BX.log
- grep "completed OK!" $LOGDIR/prepare_$BX.log -c
+
+ #if it is increment backup"
+ if [ -d $DATADIR"_bkp" ]; then
+  mv $DATADIR $DATADIR"_inc"
+  rm $LOGDIR/inc_zip.zip
+  mv $LOGDIR/inc.zip $LOGDIR/inc_old.zip
+  mv $DATADIR"_bkp" $DATADIR
+  cd $HOME/MySQL/data && zip -r $LOGDIR/inc.zip $BOX"_inc" #copy source data directory
+  fi
+ #backup of backup directory
+  rm $LOGDIR/bkp_old.zip
+  mv $LOGDIR/bkp.zip $LOGDIR/bkp_old.zip
+  cd $HOME/MySQL/data && zip -r $LOGDIR/bkp.zip $BOX #copy source data directory
+  $XT_COMMAND --prepare --apply-log-only 2>&1 | tee $LOGDIR/prepare_base$BX.log
+ grep "completed OK!" $LOGDIR/prepare_base$BX.log -c
+elif [ "prep_inc" = $1 ]; then
+ $XT_COMMAND --prepare --incremental-dir=$DATADIR"_inc"  2>&1 | tee $LOGDIR/prepare_inc$BX.log
+ grep "completed OK!" $LOGDIR/prepare_inc$BX.log -c
 elif [ "copy_src" = $1 ]; then
  rm $LOGDIR/src_data_bkp.zip
  mv $LOGDIR/src_data.zip $LOGDIR/src_data_bkp.zip
@@ -73,7 +90,10 @@ elif [ "make" = $1 ]; then
   echo "wrong choice; use debug";
   return;
  fi
- cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && make -j7 && make install
+ cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld
+ cmake $CPK -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. | tee $LOGDIR/cmake.log
+ make -j7 | tee $LOGDIR/make.log
+ make install | tee $LOGDIR/install.log
 else
     sandbox $1
 fi
