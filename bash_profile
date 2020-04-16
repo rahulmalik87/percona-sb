@@ -5,7 +5,8 @@ PORT=""
 #global alias
 alias csc='cdsm && cscope -i ./cscope.files'
 alias gs='git status'
-alias cdp='cd ~/pquery/src'
+alias cdp='cd ~/pstress/src'
+alias gpc='git push -f -u origin `echo $(basename $PWD)`' #git push current
 
 #sandboxes default is o7 ; o for oracle-mysql , p for perocna-server , x xtrabackup
 N_HELP="pick one of the box by o7|o8|o81|p7|p2|xp7|xo7|xo71 \nst: start server \ninit: initialize server \nclean : clean data and logdir\ncon: connect the server\nmkdir: make log and data directory\nbkp: to bkp xtrab backup using $BX sandbox \nprep : prepare backp \nres : restore backup\nbkp_res backup prepare and restore\n\nmodify CMK for CMAKE build\nXT_COMANND to modify XTRABCKUP option\nMYSQLD_OPTION to modify mysqld options"
@@ -198,7 +199,7 @@ function sandbox() {
     export DATADIR=$HOME/MySQL/data/$BOX
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
-    export XT_COMMAND=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --keyring-file-data=$SRC_DATADIR/key.key"
+    export XT_COMMAND=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --keyring-file-data=$SRC_DATADIR/key.key --early-plugin-load=keyring_file.so"
     export MYSQLD_OPTION=" --log-error-verbosity=3 --core-file --early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000"
     export SRC=$HOME/MySQL/src/$BX
     export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DWITHOUT_TOKUDB=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
@@ -206,8 +207,8 @@ function sandbox() {
     alias cdl='cd $LOGDIR'
     alias cds='cd $SRC'
     alias cdm='cd ~/MySQL/build/$BX'
-    alias bo='cd ~/pquery && git clean -fdx && cmake -DBASEDIR=$HOME/MySQL/build/$BX -DMYSQL=ON . && make -j && cdp && ctags -R';
-    alias bp='cd ~/pquery && git clean -fdx && cmake -DBASEDIR=$HOME/MySQL/build/$BX -DPERCONASERVER=ON . && make -j && cdp && ctags -R';
+    alias bo='cd ~/pstress && git clean -fdx && cmake -DBASEDIR=$HOME/MySQL/build/$BX -DMYSQL=ON . && make -j && cdp && ctags -R';
+    alias bp='cd ~/pstress  && git clean -fdx && cmake -DBASEDIR=$HOME/MySQL/build/$BX -DPERCONASERVER=ON . && make -j && cdp && ctags -R';
     alias cdsm='cd ~/MySQL/src/$BX'
     alias cqa='cd ~/MySQL/percona-qa'
     alias cdsx='cd $SRC/storage/innobase/xtrabackup'
