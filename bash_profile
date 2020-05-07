@@ -7,6 +7,10 @@ alias csc='cdsm && cscope -i ./cscope.files'
 alias gs='git status'
 alias cdp='cd ~/pstress/src'
 alias gpc='git push -f -u origin `echo $(basename $PWD)`' #git push current
+alias cdh='cd $HOME/MySQL'
+alias cds='cd $HOME/study'
+alias cdc='cd $HOME/study/cpp'
+export xb="$HOME/MySQL/rahul-xb"
 
 #sandboxes default is o7 ; o for oracle-mysql , p for perocna-server , x xtrabackup
 N_HELP="pick one of the box by o7|o8|o81|p7|p2|xp7|xo7|xo71 \nst: start server \ninit: initialize server \nclean : clean data and logdir\ncon: connect the server\nmkdir: make log and data directory\nbkp: to bkp xtrab backup using $BX sandbox \nprep : prepare backp \nres : restore backup\nbkp_res backup prepare and restore\n\nmodify CMK for CMAKE build\nXT_COMANND to modify XTRABCKUP option\nMYSQLD_OPTION to modify mysqld options"
@@ -251,7 +255,7 @@ function sandbox() {
 	if [ $ver = "7" ] ; then
 	 alias cdt='cd $HOME/MySQL/build/$BX/xtrabackup-test'
         else 
-	 alias cdt='cd $HOME/MySQL/build/$BX/xtrabackup-test/test'
+	 alias cdt='cd $HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/test'
 	fi
     fi;
     n mkdir
