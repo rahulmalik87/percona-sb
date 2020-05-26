@@ -11,6 +11,7 @@ alias cdh='cd $HOME/MySQL'
 alias cds='cd $HOME/study'
 alias cdc='cd $HOME/study/cpp'
 export xb="$HOME/MySQL/rahul-xb"
+alias f='find . -name '
 
 #sandboxes default is o7 ; o for oracle-mysql , p for perocna-server , x xtrabackup
 N_HELP="pick one of the box by o7|o8|o81|p7|p2|xp7|xo7|xo71 \nst: start server \ninit: initialize server \nclean : clean data and logdir\ncon: connect the server\nmkdir: make log and data directory\nbkp: to bkp xtrab backup using $BX sandbox \nprep : prepare backp \nres : restore backup\nbkp_res backup prepare and restore\n\nmodify CMK for CMAKE build\nXT_COMANND to modify XTRABCKUP option\nMYSQLD_OPTION to modify mysqld options"
@@ -251,12 +252,14 @@ function sandbox() {
 	export PS1="{\[\e[32m\]\h\[\e[m\]\[\e[36m\] $BX \[\e[m\]\W}$"
     else
 	export PS1="{\[\e[32m\]\h\[\e[m\]\[\e[36m\] $BX $BBX \[\e[m\]\W}$"
-        export PATH=$PATH":$HOME/MySQL/build/$BX/bin"
 	if [ $ver = "7" ] ; then
 	 alias cdt='cd $HOME/MySQL/build/$BX/xtrabackup-test'
         else 
+        export PATH=$PATH":$HOME/MySQL/src/$BX/bld/runtime_output_directory"
 	 alias cdt='cd $HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/test'
 	fi
+	 #link box
+	 alias lnb='cdt && rm -r server && ln -s  $HOME/MySQL/build/$BBX server'
     fi;
     n mkdir
 }
