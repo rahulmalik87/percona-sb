@@ -42,10 +42,14 @@ elif [ "kill" = $1 ]; then
 elif [ "con" = $1 ]; then
  $MYSQL --socket $SOCKET -uroot
 elif [ "bkp" = $1 ]; then
- rm -r $DATADIR*
- mkdir $DATADIR
- $XC --backup 2>&1 | tee $LOGDIR/backup_$BX.log
- grep "completed OK!" $LOGDIR/backup_$BX.log -c
+ if [ -z $BBX ]; then
+  echo " use xtrabckup sandox "
+ else
+  rm -r $DATADIR*
+  mkdir $DATADIR
+  $XC --backup 2>&1 | tee $LOGDIR/backup_$BX.log
+  grep "completed OK!" $LOGDIR/backup_$BX.log -c
+ fi
 elif [ "inc" = $1 ]; then
  mv $DATADIR $DATADIR"_bkp"
  $XC --backup --incremental-basedir=$DATADIR"_bkp" | tee $LOGDIR/increment_$BX.log
@@ -258,7 +262,7 @@ function sandbox() {
 	 alias cdt='cd $HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/test'
 	fi
 	 #link box
-	 alias lnb='cdt && rm -r server && ln -s  $HOME/MySQL/build/$BBX server'
+	 alias lnb='cdt && rm -rf server && ln -s  $HOME/MySQL/build/$BBX server'
     fi;
     n mkdir
 }
