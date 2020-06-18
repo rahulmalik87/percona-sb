@@ -233,7 +233,7 @@ function sandbox() {
     if [ $ver = "7" ] ; then
       export MYSQL_HOME=$HOME/MySQL/build/$BX
       export MYSQL=$MYSQL_HOME/bin/mysql
-      export MYSQLD=$MYSQL_HOME/bin/mysqld
+      export MYSQLD=$HOME/MySQL/src/$BX/bld/sql/mysqld
       export XB=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/xtrabackup
       MO=$MO" --basedir=$MYSQL_HOME"
       XC=$XB$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/keyring"
