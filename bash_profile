@@ -53,12 +53,14 @@ elif [ "bkp" = $1 ]; then
 elif [ "inc" = $1 ]; then
  mv $DATADIR $DATADIR"_bkp"
  $XC --backup --incremental-basedir=$DATADIR"_bkp" | tee $LOGDIR/increment_$BX.log
- grep "completed OK!" $LOGDIR/backup_$BX.log -c
+ grep "completed OK!" $LOGDIR/increment_$BX.log -c
 elif [ "prep_again" = $1 ]; then
  rm -r $HOME/MySQL/data/$BOX
  unzip $LOGDIR/bkp.zip -d $HOME/MySQL/data
  $XC --prepare 2>&1 | tee $LOGDIR/prepare_$BX.log
  grep "completed OK!" $LOGDIR/prepare_$BX.log -c
+elif [ "pr" = $1 ]; then
+ $XC --prepare 2>&1 | tee $LOGDIR/prepare_$BX.log
 elif [ "prep" = $1 ]; then
  #if it is increment backup"
  if [ -d $DATADIR"_bkp" ]; then
@@ -99,7 +101,7 @@ elif [ "make" = $1 ]; then
   echo "wrong choice; use debug";
   return;
  fi
- cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && make -j7 && make install
+ cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && make -j1 && make install
 else
     sandbox $1
 fi
@@ -109,7 +111,7 @@ fi
 
 cr() {
 find . -path ./bld -prune -o \( -name \*.i -o -name \*.ic -o -name \*.h -o -name \*.c -o -name \*.cc -o -name \*.yy -o -name \*.ll -o -name \*.y -o -name \*.I -o -name \*.cpp -o -name \*.txt \) > cscope.files
-ctags --langmap=c++:+.ic --langmap=c++:+.i -L ./cscope.files
+ctags --langmap=c++:+.ic --langmap=c++:+.i -L cscope.files
 \cscope -i ./cscope.files
 }
 
@@ -209,7 +211,7 @@ function sandbox() {
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
     export XC=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --keyring-file-data=$SRC_DATADIR/key.key --early-plugin-load=keyring_file.so"
-    export MO=" --log-error-verbosity=3 --core-file --early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000"
+    export MO=" --log-error-verbosity=3 --core-file --early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --enforce-gtid-consistency --server-id=$PORT --gtid-mode=ON --binlog_format=row"
     export SRC=$HOME/MySQL/src/$BX
     export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DWITHOUT_TOKUDB=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
     alias cdd='cd $DATADIR'
