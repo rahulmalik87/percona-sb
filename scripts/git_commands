@@ -1,0 +1,15 @@
+
+BUG=PXB-8.0-2429 && git fetch upstream 8.0 && `echo  git worktree add -b $BUG ../$BUG upstream/8.0` && cd ../$BUG
+
+
+git push origin `basename $PWD` -f
+
+git pull --rebase 8.0
+
+merge upstream 
+cd $xb && git fetch upstream && git worktree add -b PXB-8023-merge ../PS-8023-merge upstream/8.0
+git fetch mysql-server
+git mere msyql-8.0.23
+
+
+

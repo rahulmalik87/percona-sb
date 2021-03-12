@@ -1,0 +1,1 @@
+sysbench /usr/local/Cellar/sysbench/1.0.20/share/sysbench/oltp_insert.lua --mysql-db=test --mysql-user=root  --mysql-socket=$SOCKET --threads=10 --time=1500 --report-interval=1 --events=0 --db-driver=mysql run
