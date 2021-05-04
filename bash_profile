@@ -8,6 +8,7 @@ alias gs='git status'
 alias cdp='cd ~/pstress/src'
 alias gpc='git push -f -u origin `echo $(basename $PWD)`' #git push current
 alias cdh='cd $HOME/MySQL'
+alias cdsh='cd $HOME/MySQL/scripts'
 alias cds='cd $HOME/study'
 alias cdc='cd $HOME/study/cpp'
 export xb="$HOME/MySQL/rahul-xb"
@@ -52,7 +53,7 @@ elif [ "bkp" = $1 ]; then
  fi
 elif [ "inc" = $1 ]; then
  mv $DATADIR $DATADIR"_bkp"
- $XC --backup --incremental-basedir=$DATADIR"_bkp" | tee $LOGDIR/increment_$BX.log
+ $XC --backup --incremental-basedir=$DATADIR"_bkp" 2>&1 | tee $LOGDIR/increment_$BX.log
  grep "completed OK!" $LOGDIR/increment_$BX.log -c
 elif [ "prep_again" = $1 ]; then
  rm -r $HOME/MySQL/data/$BOX
@@ -101,7 +102,7 @@ elif [ "make" = $1 ]; then
   echo "wrong choice; use debug";
   return;
  fi
- cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && make -j1 && make install
+ cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -G Ninja -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && ninja
 else
     sandbox $1
 fi
