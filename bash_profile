@@ -224,6 +224,7 @@ function sandbox() {
     alias cdsm='cd ~/MySQL/src/$BX'
     alias cqa='cd ~/MySQL/percona-qa'
     alias cdsx='cd $SRC/storage/innobase/xtrabackup'
+    alias cdsxb='cd $SRC/storage/innobase/xtrabackup/src/xbcloud' 
     alias cdbl='cd $HOME/MySQL/src/$BX/bld'
     alias gc='git clean -fdx'
     alias gp='git pull'
@@ -242,6 +243,7 @@ function sandbox() {
       XC=$XB$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/keyring"
       alias dt='$HOME/MySQL/build/o7/bin/mysql  --socket $SOCKET -uroot test'
       alias cdb='$HOME/MySQL/build/o7/bin/mysql  --socket $SOCKET -uroot -e "create database test;"'
+      export PATH=$PATH":$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/xbcloud"
     else
       export MYSQL_HOME=$HOME/MySQL/src/$BX/bld/runtime_output_directory
       export MYSQL=$MYSQL_HOME/mysql
