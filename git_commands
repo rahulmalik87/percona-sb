@@ -1,0 +1,43 @@
+
+BUG=PXB-8.0-2429 && git fetch upstream 8.0 && `echo  git worktree add -b $BUG ../$BUG upstream/8.0` && cd ../$BUG
+
+for pstress
+BUG=pstress-78 && git fetch upstream master && `echo  git worktree add -b $BUG ../$BUG upstream/master` && cd ../$BUG
+
+git push origin `basename $PWD` -f
+
+git pull --rebase 8.0
+
+merge upstream 
+cd $xb && git fetch upstream && git worktree add -b PXB-8023-merge ../PS-8023-merge upstream/8.0
+git fetch mysql-server
+git mere msyql-8.0.23
+
+"how to delete worktree"
+BUG=PXB-8.0-null-merge && git worktree remove  $BUG --force && git branch -D $BUG 
+
+"merge to upper and lower branch together:
+git merge PXB-2.4. -s ours
+patch -p1 < /tmp/patch
+git add *
+
+"how to do null merge from 2.4 to 8.0"
+BUG=PXB-8.0-null-merge && git fetch upstream 8.0 && `echo  git worktree add -b $BUG ../$BUG upstream/8.0` && cd ../$BUG
+git fetch upstream 2.4
+git merge upstream/2.4  -s ours
+git push origin `basename $PWD`
+
+
+cherry pick commit from lower branch
+git cherry-pick -x $COMMIT
+
+create null pull request add comment and merge. 
+
+cd $xb
+git worktree remove PXB-8.0-null-merge
+git branch -D PXB-8.0-null-merge
+
+to create pull request in 2.4
+
+BUG=PXB-2.4-id && git fetch upstream 2.4 && `echo  git worktree add -b $BUG ../$BUG upstream/2.4` && cd ../$BUG
+

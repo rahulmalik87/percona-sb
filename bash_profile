@@ -129,6 +129,7 @@ export QA06='rahul.malik@10.30.6.206'
 export QA09='rahul.malik@10.30.6.209'
 export QA20='rahul.malik@10.30.7.20'
 export QA02='rahul.malik@10.30.6.202'
+export QAsatya='rahul.malik@10.30.3.209'
 }
 
 print_space_id_low() {
@@ -211,7 +212,7 @@ function sandbox() {
     export DATADIR=$HOME/MySQL/data/$BOX
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
-    export XC=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --keyring-file-data=$SRC_DATADIR/key.key --early-plugin-load=keyring_file.so"
+    export XC=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --keyring-file-data=$SRC_DATADIR/key.key "
     export MO=" --log-error-verbosity=3 --core-file --early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --enforce-gtid-consistency --server-id=$PORT --gtid-mode=ON --binlog_format=row"
     export SRC=$HOME/MySQL/src/$BX
     export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DWITHOUT_TOKUDB=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
@@ -241,8 +242,8 @@ function sandbox() {
       export XB=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/xtrabackup
       MO=$MO" --basedir=$MYSQL_HOME"
       XC=$XB$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/keyring"
-      alias dt='$HOME/MySQL/build/o7/bin/mysql  --socket $SOCKET -uroot test'
-      alias cdb='$HOME/MySQL/build/o7/bin/mysql  --socket $SOCKET -uroot -e "create database test;"'
+      alias dt='$HOME/MySQL/build/o8/bin/mysql  --socket $SOCKET -uroot test'
+      alias cdb='$HOME/MySQL/build/o8/bin/mysql  --socket $SOCKET -uroot -e "create database test;"'
       export PATH=$PATH":$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/xbcloud"
     else
       export MYSQL_HOME=$HOME/MySQL/src/$BX/bld/runtime_output_directory
@@ -270,6 +271,10 @@ function sandbox() {
 	 alias lnb='cdt && rm -rf server && ln -s  $HOME/MySQL/build/$BBX server'
     fi;
     n mkdir
+}
+
+function get_gca {
+git show `git rev-list "$1" ^"$2" --first-parent --topo-order | tail -1` 
 }
 
 [ `uname` = Darwin ] && darwin
