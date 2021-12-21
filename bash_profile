@@ -130,6 +130,7 @@ export QA09='rahul.malik@10.30.6.209'
 export QA20='rahul.malik@10.30.7.20'
 export QA02='rahul.malik@10.30.6.202'
 export QAsatya='rahul.malik@10.30.3.209'
+export QAmanish='rahul.malik@10.30.6.61'
 }
 
 print_space_id_low() {
@@ -219,9 +220,10 @@ function sandbox() {
     alias cdd='cd $DATADIR'
     alias cdl='cd $LOGDIR'
     alias cds='cd $SRC'
+    BASEDIR=$HOME/MySQL/build/$BX
     alias cdm='cd ~/MySQL/build/$BX'
-    alias bo='cd ~/pstress && git clean -fdx && cmake -DBASEDIR=$HOME/MySQL/build/$BX -DMYSQL=ON . && make -j && cdp && ctags -R';
-    alias bp='cd ~/pstress  && git clean -fdx && cmake -DBASEDIR=$HOME/MySQL/build/$BX -DPERCONASERVER=ON . && make -j && cdp && ctags -R';
+    alias bo='cd ~/pstress && git clean -fdx && cmake -DBASEDIR=$BASEDIR -DMYSQL=ON . && make -j && cdp && ctags -R';
+    alias bp='cd ~/pstress  && git clean -fdx && cmake -DBASEDIR=$BASEDIR -DPERCONASERVER=ON . && make -j && cdp && ctags -R';
     alias cdsm='cd ~/MySQL/src/$BX'
     alias cqa='cd ~/MySQL/percona-qa'
     alias cdsx='cd $SRC/storage/innobase/xtrabackup'
@@ -237,13 +239,11 @@ function sandbox() {
      #opition based on mysql version 5.7 or 8.0
     if [ $ver = "7" ] ; then
       export MYSQL_HOME=$HOME/MySQL/build/$BX
-      export MYSQL=$MYSQL_HOME/bin/mysql
       export MYSQLD=$HOME/MySQL/src/$BX/bld/sql/mysqld
+      export MYSQL=$MYSQL_HOME/bin/mysql
       export XB=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/xtrabackup
       MO=$MO" --basedir=$MYSQL_HOME"
       XC=$XB$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/keyring"
-      alias dt='$HOME/MySQL/build/o8/bin/mysql  --socket $SOCKET -uroot test'
-      alias cdb='$HOME/MySQL/build/o8/bin/mysql  --socket $SOCKET -uroot -e "create database test;"'
       export PATH=$PATH":$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/xbcloud"
     else
       export MYSQL_HOME=$HOME/MySQL/src/$BX/bld/runtime_output_directory
@@ -252,9 +252,10 @@ function sandbox() {
       export XB=$MYSQL_HOME/xtrabackup
       MO=$MO" --loose_mysqlx_port=$PORT --loose_mysqlx_socket=/tmp/mysqx_`expr $PORT - 50`.sock  --loose_mysqlx_port=`expr $PORT - 50` --basedir=$MYSQL_HOME --plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory "
       XC=$XB$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory"
-      alias dt='$HOME/MySQL/build/o8/bin/mysql  --socket $SOCKET -uroot test'
-      alias cdb='$HOME/MySQL/build/o8/bin/mysql  --socket $SOCKET -uroot -e "create database test;"'
     fi
+      export MYSQL_o8=$HOME/MySQL/src/o8/bld/runtime_output_directory/mysql
+      alias cdb='$MYSQL  --socket $SOCKET -uroot -e "create database test;"'
+      alias dt='$MYSQL_o8  --socket $SOCKET -uroot test'
 
     #options based on PXB
     if [ -z $BBX ] ; then
