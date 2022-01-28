@@ -102,7 +102,10 @@ elif [ "make" = $1 ]; then
   echo "wrong choice; use debug";
   return;
  fi
- cd $SRC && rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -G Ninja -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && ninja
+ cd $SRC
+ git submodule init
+ git submodule update
+ rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -G Ninja -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && ninja
 else
     sandbox $1
 fi
@@ -214,7 +217,7 @@ function sandbox() {
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
     export XC=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --keyring-file-data=$SRC_DATADIR/key.key "
-    export MO=" --log-error-verbosity=3 --core-file --early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --enforce-gtid-consistency --server-id=$PORT --gtid-mode=ON --binlog_format=row"
+    export MO=" --gdb --log-error-verbosity=3 --core-file --early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --enforce-gtid-consistency --server-id=$PORT --gtid-mode=ON --binlog_format=row"
     export SRC=$HOME/MySQL/src/$BX
     export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DWITHOUT_TOKUDB=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
     alias cdd='cd $DATADIR'
@@ -231,7 +234,8 @@ function sandbox() {
     alias cdbl='cd $HOME/MySQL/src/$BX/bld'
     alias gc='git clean -fdx'
     alias gp='git pull'
-    alias lscp='git diff --cached > /tmp/1.patch && scp /tmp/1.patch $QA20:/tmp'
+    LSCP=$QA20
+    alias lscp='git diff --cached > /tmp/1.patch && scp /tmp/1.patch $LSCP:/tmp'
     alias tap='patch -p1 < /tmp/1.patch'
     alias ttp='git diff --cached > /tmp/1.patch'
     ulimit -c unlimited
@@ -278,4 +282,32 @@ function get_gca {
 git show `git rev-list "$1" ^"$2" --first-parent --topo-order | tail -1` 
 }
 
+#example BRANCH=upsteram && BUG=PXB-8.0-2429
+function create_wt {
+cd $xb && git fetch $BRANCH 8.0 && `echo  git worktree add -b $BUG ../$BUG $BRANCH/8.0` && cd ../$BUG
+}
+
+find_info() {
+        max=$2
+        for i in `seq 0 $max`
+        do
+
+                dd ibs=$3 skip=$i count=1 if=$1 > /tmp/out$i.bin
+                f=/tmp/out$i.bin
+                echo "----------------------------------------"
+                echo "Processing file $f";
+                echo "SPACE ID:      ";od -j34  -N4 -An -t x1 $f;
+                echo "PAGE OFFSET:   ";od -j4   -N4 -An -t x1 $f;
+                echo "PAGE LSN:      ";od -j16  -N8 -An -t x1 $f;
+                echo "PAGE LEVEL:    ";od -j64  -N2 -An -t x1 $f;
+                echo "PAGE INDEX ID: ";od -j66  -N8 -An -t x1 $f;
+                echo "PAGE TYPE:     ";od -j24  -N2 -An -t x1 $f;
+                echo "PAGE PREV:     ";od -j8   -N4 -An -t x1 $f;
+                echo "PAGE NEXT:     ";od -j12  -N4 -An -t x1 $f;
+                rm $f
+        done
+}
+
 [ `uname` = Darwin ] && darwin
+
+

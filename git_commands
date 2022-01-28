@@ -1,5 +1,5 @@
 
-BUG=PXB-8.0-2429 && git fetch upstream 8.0 && `echo  git worktree add -b $BUG ../$BUG upstream/8.0` && cd ../$BUG
+BRANCH=upstream && BUG=PXB-8.0-2429 && git fetch $BRANCH 8.0 && `echo  git worktree add -b $BUG ../$BUG $BRANCH/8.0` && cd ../$BUG
 
 for pstress
 BUG=pstress-78 && git fetch upstream master && `echo  git worktree add -b $BUG ../$BUG upstream/master` && cd ../$BUG
@@ -22,10 +22,7 @@ patch -p1 < /tmp/patch
 git add *
 
 "how to do null merge from 2.4 to 8.0"
-BUG=PXB-8.0-null-merge && git fetch upstream 8.0 && `echo  git worktree add -b $BUG ../$BUG upstream/8.0` && cd ../$BUG
-git fetch upstream 2.4
-git merge upstream/2.4  -s ours
-git push origin `basename $PWD`
+BUG=PXB-8.0-null-merge && git fetch upstream 8.0 && `echo  git worktree add -b $BUG ../$BUG upstream/8.0` && cd ../$BUG && git fetch upstream 2.4 && git merge upstream/2.4  -s ours && git push origin `basename $PWD`
 
 
 cherry pick commit from lower branch
