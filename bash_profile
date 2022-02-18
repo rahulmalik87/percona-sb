@@ -287,11 +287,25 @@ function create_wt {
 cd $xb && git fetch $BRANCH 8.0 && `echo  git worktree add -b $BUG ../$BUG $BRANCH/8.0` && cd ../$BUG
 }
 
-find_info() {
+#remove worktree 
+#example remove_wt PS-8.0-12323
+function remove_wt {
+	BUG=$1
+	cd $xb &&  git worktree remove  $BUG --force && git branch -D $BUG
+}
+
+#open file name matching
+function fo() {
+         find -L $PWD -name $1  -exec vim {} \;
+}
+
+# find the information of page
+#example find_info INPUT_FILE MAX_BLOCK BLOCK_SIZE
+#example find_info t1.ibd 12 2048
+function find_info() {
         max=$2
         for i in `seq 0 $max`
         do
-
                 dd ibs=$3 skip=$i count=1 if=$1 > /tmp/out$i.bin
                 f=/tmp/out$i.bin
                 echo "----------------------------------------"
@@ -309,5 +323,3 @@ find_info() {
 }
 
 [ `uname` = Darwin ] && darwin
-
-
