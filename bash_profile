@@ -220,8 +220,8 @@ function sandbox() {
     export DATADIR=$HOME/MySQL/data/$BOX
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
-    export XC=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --loose_keyring-file-data=$SRC_DATADIR/key.key "
-    export MO=" --gdb --loose-log-error-verbosity=3 --core-file --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --skip-grant-tables"
+    export XC=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --loose_keyring-file-data=$SRC_DATADIR/key.key"
+    export MO=" --gdb --loose-log-error-verbosity=3 --core-file --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --skip-grant-tables --log-bin --log-slave-updates"
     export SRC=$HOME/MySQL/src/$BX
     export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DWITHOUT_TOKUDB=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
     alias cdd='cd $DATADIR'
