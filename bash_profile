@@ -3,6 +3,7 @@ BX=""
 BBX="" #if set means, running with backup directory:w
 PORT=""
 #global alias
+alias tap='patch -p1 < /tmp/1.patch'
 alias csc='cdsm && cscope -i ./cscope.files'
 alias gs='git status'
 alias cdp='cd ~/pstress/src'
@@ -93,6 +94,9 @@ elif [ "res_only" = $1 ]; then
  cp $LOGDIR/key.key $SRC_DATADIR
 elif [ "bkp_res" = $1 ]; then
  n bkp && n inc && n kill && n copy_src && n prep && n prep_inc && n res
+ #remake
+elif [ "rm" = $1 ]; then
+	cd $SRC/bld && ninja
 elif [ "make" = $1 ]; then
  if [ -z $2 ]; then
   CPK=$CMK
@@ -216,8 +220,8 @@ function sandbox() {
     export DATADIR=$HOME/MySQL/data/$BOX
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
-    export XC=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --keyring-file-data=$SRC_DATADIR/key.key "
-    export MO=" --gdb --log-error-verbosity=3 --core-file --early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --enforce-gtid-consistency --server-id=$PORT --gtid-mode=ON --binlog_format=row"
+    export XC=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --loose_keyring-file-data=$SRC_DATADIR/key.key "
+    export MO=" --gdb --loose-log-error-verbosity=3 --core-file --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --skip-grant-tables"
     export SRC=$HOME/MySQL/src/$BX
     export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DWITHOUT_TOKUDB=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
     alias cdd='cd $DATADIR'
@@ -230,13 +234,12 @@ function sandbox() {
     alias cdsm='cd ~/MySQL/src/$BX'
     alias cqa='cd ~/MySQL/percona-qa'
     alias cdsx='cd $SRC/storage/innobase/xtrabackup'
-    alias cdsxb='cd $SRC/storage/innobase/xtrabackup/src/xbcloud' 
+    alias cdsxb='cd $SRC/storage/innobase/xtrabackup/src/xbcloud'
     alias cdbl='cd $HOME/MySQL/src/$BX/bld'
     alias gc='git clean -fdx'
     alias gp='git pull'
     LSCP=$QA20
     alias lscp='git diff --cached > /tmp/1.patch && scp /tmp/1.patch $LSCP:/tmp'
-    alias tap='patch -p1 < /tmp/1.patch'
     alias ttp='git diff --cached > /tmp/1.patch'
     ulimit -c unlimited
 
@@ -254,7 +257,7 @@ function sandbox() {
       export MYSQL=$MYSQL_HOME/mysql
       export MYSQLD=$MYSQL_HOME/mysqld
       export XB=$MYSQL_HOME/xtrabackup
-      MO=$MO" --loose_mysqlx_port=$PORT --loose_mysqlx_socket=/tmp/mysqx_`expr $PORT - 50`.sock  --loose_mysqlx_port=`expr $PORT - 50` --basedir=$MYSQL_HOME --plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory "
+      MO=$MO" --loose_mysqlx_port=$PORT --loose_mysqlx_socket=/tmp/mysqx_`expr $PORT - 50`.sock  --loose_mysqlx_port=`expr $PORT - 50` --basedir=$MYSQL_HOME --plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory --skip-grant-tables"
       XC=$XB$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory"
     fi
       export MYSQL_o8=$HOME/MySQL/src/o8/bld/runtime_output_directory/mysql
@@ -268,7 +271,7 @@ function sandbox() {
 	export PS1="{\[\e[32m\]\h\[\e[m\]\[\e[36m\] $BX $BBX \[\e[m\]\W}$"
 	if [ $ver = "7" ] ; then
 	 alias cdt='cd $HOME/MySQL/build/$BX/xtrabackup-test'
-        else 
+        else
         export PATH=$PATH":$HOME/MySQL/src/$BX/bld/runtime_output_directory"
 	 alias cdt='cd $HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/test'
 	fi
@@ -279,17 +282,32 @@ function sandbox() {
 }
 
 function get_gca {
-git show `git rev-list "$1" ^"$2" --first-parent --topo-order | tail -1` 
+  if [ -z $1 ]; then
+    echo "example get_gca ps 5.7 ps 8.0"
+    return
+  fi
+  cd $xb
+  git fetch  $1 $2
+  git fetch $3 $3
+  git show `git rev-list "$1/$2" ^"$3/$4" --first-parent --topo-order | tail -1`
 }
 
-#example BRANCH=upsteram && BUG=PXB-8.0-2429
 function create_wt {
-cd $xb && git fetch $BRANCH 8.0 && `echo  git worktree add -b $BUG ../$BUG $BRANCH/8.0` && cd ../$BUG
+  if [ -z $1 ]; then
+    echo "example create_wt ps 8.0 2429"
+    return
+  fi
+  REPO=$1
+  BRANCH=$2
+  BUG="$1-$2-$3"
+  cd $xb && git fetch $REPO $BRANCH && git worktree add -b $BUG ../$BUG $REPO/$BRANCH && cd ../$BUG
 }
 
-#remove worktree 
-#example remove_wt PS-8.0-12323
 function remove_wt {
+  if [ -z $1 ]; then
+    echo "example remove_wt ps-8.0-2429"
+    return
+  fi
 	BUG=$1
 	cd $xb &&  git worktree remove  $BUG --force && git branch -D $BUG
 }
