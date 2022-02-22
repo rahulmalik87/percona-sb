@@ -175,9 +175,9 @@ function subbox() {
 
     if [ $tp = "o" ] ; then
 	export m_version="oracle";
-	PORT=132
+	PORT=31
     else
-	PORT=122
+	PORT=32
 	export m_version="ps";
     fi
 
@@ -187,7 +187,7 @@ function subbox() {
         ab=`echo $1 | cut -c2-3`
     fi
     BX=$1
-    PORT=$PORT$ab
+    PORT=$PORT$ab$ver
 }
 
 function sandbox() {
