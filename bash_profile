@@ -11,6 +11,7 @@ alias gpc='git push -f -u origin `echo $(basename $PWD)`' #git push current
 alias cdh='cd $HOME/MySQL'
 alias cdsh='cd $HOME/MySQL/scripts'
 alias cds='cd $HOME/study'
+alias cdsb='cd $HOME/MySQL/src/percona-sb'
 alias cdc='cd $HOME/study/cpp'
 export xb="$HOME/MySQL/rahul-xb"
 alias f='find . -name '
@@ -110,6 +111,7 @@ elif [ "make" = $1 ]; then
  git submodule init
  git submodule update
  rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -G Ninja -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && ninja
+ cd $SRC  && git checkout storage/tokudb && git checkout storage/rocksdb
 else
     sandbox $1
 fi
@@ -236,7 +238,7 @@ function sandbox() {
     alias cdsx='cd $SRC/storage/innobase/xtrabackup'
     alias cdsxb='cd $SRC/storage/innobase/xtrabackup/src/xbcloud'
     alias cdbl='cd $HOME/MySQL/src/$BX/bld'
-    alias gc='git clean -fdx'
+    alias gc="git checkout"
     alias gp='git pull'
     LSCP=$QA20
     alias lscp='git diff --cached > /tmp/1.patch && scp /tmp/1.patch $LSCP:/tmp'
@@ -315,6 +317,27 @@ function remove_wt {
 #open file name matching
 function fo() {
          find -L $PWD -name $1  -exec vim {} \;
+}
+
+#example git_push force
+function git_push {
+  FORCE=""
+  repo=rahul-`basename $PWD |  cut -d"-" -f1`
+  if [ -z $1 ]; then
+    git push $repo `basename $PWD`
+  else
+    git push $repo `basename $PWD` --force
+  fi
+}
+
+function git_show {
+  if [ -z $1 ]; then
+	  echo git_show last commit
+	  return
+  fi
+
+  git show `git log -n 1 --skip $1 --pretty=format:"%H"`
+
 }
 
 # find the information of page
