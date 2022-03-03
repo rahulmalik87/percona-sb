@@ -50,20 +50,20 @@ elif [ "bkp" = $1 ]; then
  else
   rm -r $DATADIR*
   mkdir $DATADIR
-  $XC --backup 2>&1 | tee $LOGDIR/backup_$BX.log
+  $XB $XC --backup 2>&1 | tee $LOGDIR/backup_$BX.log
   grep "completed OK!" $LOGDIR/backup_$BX.log -c
  fi
 elif [ "inc" = $1 ]; then
  mv $DATADIR $DATADIR"_bkp"
- $XC --backup --incremental-basedir=$DATADIR"_bkp" 2>&1 | tee $LOGDIR/increment_$BX.log
+ $XB $XC --backup --incremental-basedir=$DATADIR"_bkp" 2>&1 | tee $LOGDIR/increment_$BX.log
  grep "completed OK!" $LOGDIR/increment_$BX.log -c
 elif [ "prep_again" = $1 ]; then
  rm -r $HOME/MySQL/data/$BOX
  unzip $LOGDIR/bkp.zip -d $HOME/MySQL/data
- $XC --prepare 2>&1 | tee $LOGDIR/prepare_$BX.log
+ $XB $XC --prepare 2>&1 | tee $LOGDIR/prepare_$BX.log
  grep "completed OK!" $LOGDIR/prepare_$BX.log -c
 elif [ "pr" = $1 ]; then
- $XC --prepare 2>&1 | tee $LOGDIR/prepare_$BX.log
+ $XB $XC --prepare 2>&1 | tee $LOGDIR/prepare_$BX.log
 elif [ "prep" = $1 ]; then
  #if it is increment backup"
  if [ -d $DATADIR"_bkp" ]; then
@@ -77,10 +77,10 @@ elif [ "prep" = $1 ]; then
  rm $LOGDIR/bkp_old.zip
  mv $LOGDIR/bkp.zip $LOGDIR/bkp_old.zip
  cd $HOME/MySQL/data && zip -r $LOGDIR/bkp.zip $BOX #copy source data directory
- $XC --prepare --apply-log-only 2>&1 | tee $LOGDIR/prepare_base$BX.log
+ $XB $XC --prepare --apply-log-only 2>&1 | tee $LOGDIR/prepare_base$BX.log
  grep "completed OK!" $LOGDIR/prepare_base$BX.log -c
 elif [ "prep_inc" = $1 ]; then
- $XC --prepare --incremental-dir=$DATADIR"_inc"  2>&1 | tee $LOGDIR/prepare_inc$BX.log
+ $XB $XC --prepare --incremental-dir=$DATADIR"_inc"  2>&1 | tee $LOGDIR/prepare_inc$BX.log
  grep "completed OK!" $LOGDIR/prepare_inc$BX.log -c
 elif [ "copy_src" = $1 ]; then
  rm $LOGDIR/src_data_bkp.zip
@@ -91,7 +91,7 @@ elif [ "res" = $1 ]; then
  n copy_src && n res_only
 elif [ "res_only" = $1 ]; then
  rm -r $SRC_DATADIR/*
- $XC --copy-back --datadir=$SRC_DATADIR 2>&1 | tee $LOGDIR/restore_$BX.log
+ $XB $XC --copy-back --datadir=$SRC_DATADIR 2>&1 | tee $LOGDIR/restore_$BX.log
  cp $LOGDIR/key.key $SRC_DATADIR
 elif [ "bkp_res" = $1 ]; then
  n bkp && n inc && n kill && n copy_src && n prep && n prep_inc && n res
@@ -252,7 +252,7 @@ function sandbox() {
       export MYSQL=$MYSQL_HOME/bin/mysql
       export XB=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/xtrabackup
       MO=$MO" --basedir=$MYSQL_HOME"
-      XC=$XB$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/keyring"
+      XC=$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/keyring"
       export PATH=$PATH":$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/xbcloud"
     else
       export MYSQL_HOME=$HOME/MySQL/src/$BX/bld/runtime_output_directory
@@ -260,7 +260,7 @@ function sandbox() {
       export MYSQLD=$MYSQL_HOME/mysqld
       export XB=$MYSQL_HOME/xtrabackup
       MO=$MO" --loose_mysqlx_port=$PORT --loose_mysqlx_socket=/tmp/mysqx_`expr $PORT - 50`.sock  --loose_mysqlx_port=`expr $PORT - 50` --basedir=$MYSQL_HOME --plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory --skip-grant-tables"
-      XC=$XB$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory"
+      XC=$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory"
     fi
       export MYSQL_o8=$HOME/MySQL/src/o8/bld/runtime_output_directory/mysql
       alias cdb='$MYSQL  --socket $SOCKET -uroot -e "create database test;"'
