@@ -1,15 +1,15 @@
 
-BRANCH=upstream && BUG=PXB-8.0-2429 && git fetch $BRANCH 8.0 && `echo  git worktree add -b $BUG ../$BUG $BRANCH/8.0` && cd ../$BUG
+BRANCH=pxb && BUG=PXB-8.0-2429 && git fetch $BRANCH 8.0 && `echo  git worktree add -b $BUG ../$BUG $BRANCH/8.0` && cd ../$BUG
 
 for pstress
-BUG=pstress-78 && git fetch upstream master && `echo  git worktree add -b $BUG ../$BUG upstream/master` && cd ../$BUG
+BUG=pstress-78 && git fetch pxb master && `echo  git worktree add -b $BUG ../$BUG pxb/master` && cd ../$BUG
 
 git push origin `basename $PWD` -f
 
 git pull --rebase 8.0
 
-merge upstream 
-cd $xb && git fetch upstream && git worktree add -b PXB-8023-merge ../PS-8023-merge upstream/8.0
+merge pxb 
+cd $xb && git fetch pxb && git worktree add -b PXB-8023-merge ../PS-8023-merge pxb/8.0
 git fetch mysql-server
 git mere msyql-8.0.23
 
@@ -21,8 +21,14 @@ git merge PXB-2.4. -s ours
 patch -p1 < /tmp/patch
 git add *
 
+In case of refesh in pxb 2.4
+git reset HEAD~
+git fetch pxb-2.4
+#ensure the commits are good
+git merge pxb-2.4- -s ours
+
 "how to do null merge from 2.4 to 8.0"
-BUG=PXB-8.0-null-merge && git fetch upstream 8.0 && `echo  git worktree add -b $BUG ../$BUG upstream/8.0` && cd ../$BUG && git fetch upstream 2.4 && git merge upstream/2.4  -s ours && git push origin `basename $PWD`
+BUG=PXB-8.0-null-merge && git fetch pxb 8.0 && `echo  git worktree add -b $BUG ../$BUG pxb/8.0` && cd ../$BUG && git fetch pxb 2.4 && git merge pxb/2.4  -s ours && git push rahul-pxb `basename $PWD`
 
 
 cherry pick commit from lower branch
@@ -36,5 +42,5 @@ git branch -D PXB-8.0-null-merge
 
 to create pull request in 2.4
 
-BUG=PXB-2.4-id && git fetch upstream 2.4 && `echo  git worktree add -b $BUG ../$BUG upstream/2.4` && cd ../$BUG
+BUG=PXB-2.4-id && git fetch pxb 2.4 && `echo  git worktree add -b $BUG ../$BUG pxb/2.4` && cd ../$BUG
 

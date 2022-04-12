@@ -15,6 +15,7 @@ alias cdsb='cd $HOME/MySQL/src/percona-sb'
 alias cdc='cd $HOME/study/cpp'
 export xb="$HOME/MySQL/rahul-xb"
 alias f='find . -name '
+alias bkpup='$XB $XC --backup --stream=xbstream | xbcloud put `date "+%m%d%H%M%Y%S"` $XBCLOUD_CREDENTIALS'
 
 #sandboxes default is o7 ; o for oracle-mysql , p for perocna-server , x xtrabackup
 N_HELP="pick one of the box by o7|o8|o81|p7|p2|xp7|xo7|xo71 \nst: start server \ninit: initialize server \nclean : clean data and logdir\ncon: connect the server\nmkdir: make log and data directory\nbkp: to bkp xtrab backup using $BX sandbox \nprep : prepare backp \nres : restore backup\nbkp_res backup prepare and restore\n\nmodify CMK for CMAKE build\nXT_COMANND to modify XTRABCKUP option\nMO to modify mysqld options"
@@ -110,10 +111,9 @@ elif [ "make" = $1 ]; then
  cd $SRC
  git submodule init
  git submodule update
- rm -rf storage/rocksdb && rm -rf storage/tokudb && rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -G Ninja -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && ninja
- cd $SRC  && git checkout storage/tokudb && git checkout storage/rocksdb
+ rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -G Ninja -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && ninja && ninja install &&  cd $SRC && cr
 else
-    sandbox $1
+  sandbox $1
 fi
 }
 
@@ -138,8 +138,10 @@ export QA06='rahul.malik@10.30.6.206'
 export QA09='rahul.malik@10.30.6.209'
 export QA20='rahul.malik@10.30.7.20'
 export QA02='rahul.malik@10.30.6.202'
+export QA03='rahul.malik@10.30.6.203'
 export QAsatya='rahul.malik@10.30.3.209'
 export QAmanish='rahul.malik@10.30.6.61'
+export md5sum='md5'
 }
 
 print_space_id_low() {
@@ -223,9 +225,9 @@ function sandbox() {
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
     export XC=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --loose_keyring-file-data=$SRC_DATADIR/key.key"
-    export MO=" --gdb --loose-log-error-verbosity=3 --core-file --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --skip-grant-tables --log-bin --log-slave-updates"
+    export MO=" --gdb --loose-log-error-verbosity=3 --core-file --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --log-bin --log-slave-updates"
     export SRC=$HOME/MySQL/src/$BX
-    export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DWITHOUT_TOKUDB=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
+    export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
     alias cdd='cd $DATADIR'
     alias cdl='cd $LOGDIR'
     alias cds='cd $SRC'
@@ -249,7 +251,7 @@ function sandbox() {
     if [ $ver = "7" ] ; then
       export MYSQL_HOME=$HOME/MySQL/build/$BX
       export MYSQLD=$HOME/MySQL/src/$BX/bld/sql/mysqld
-      export MYSQL=$MYSQL_HOME/bin/mysql
+      export MYSQL=$HOME/MySQL/src/$BX/bld/client/mysql
       export XB=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/xtrabackup
       MO=$MO" --basedir=$MYSQL_HOME"
       XC=$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/keyring"
@@ -259,9 +261,10 @@ function sandbox() {
       export MYSQL=$MYSQL_HOME/mysql
       export MYSQLD=$MYSQL_HOME/mysqld
       export XB=$MYSQL_HOME/xtrabackup
-      MO=$MO" --loose_mysqlx_port=$PORT --loose_mysqlx_socket=/tmp/mysqx_`expr $PORT - 50`.sock  --loose_mysqlx_port=`expr $PORT - 50` --basedir=$MYSQL_HOME --plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory --skip-grant-tables"
+      MO=$MO" --loose_mysqlx_port=$PORT --loose_mysqlx_socket=/tmp/mysqx_`expr $PORT - 50`.sock  --loose_mysqlx_port=`expr $PORT - 50` --basedir=$MYSQL_HOME --plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory "
       XC=$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory"
     fi
+      alias cdt='cd $HOME/MySQL/src/$BX/bld/mysql-test'
       export MYSQL_o8=$HOME/MySQL/src/o8/bld/runtime_output_directory/mysql
       alias cdb='$MYSQL  --socket $SOCKET -uroot -e "create database test;"'
       alias dt='$MYSQL_o8  --socket $SOCKET -uroot test'
@@ -297,12 +300,17 @@ function get_gca {
 function create_wt {
   if [ -z $1 ]; then
     echo "example create_wt ps 8.0 2429"
+    echo "example create_wt ps 8.0 2429 commit_id"
     return
   fi
   REPO=$1
   BRANCH=$2
   BUG="$1-$2-$3"
-  cd $xb && git fetch $REPO $BRANCH && git worktree add -b $BUG ../$BUG $REPO/$BRANCH && cd ../$BUG
+  if [ -z $4 ]; then
+  cd $xb && git fetch $REPO $BRANCH && git worktree add -b $BUG ../$BUG $REPO/$BRANCH  && cd ../$BUG
+  else
+  cd $xb && git fetch $REPO $BRANCH && git worktree add -b $BUG ../$BUG $4  && cd ../$BUG
+  fi
 }
 
 function remove_wt {
@@ -336,7 +344,7 @@ function git_show {
 	  return
   fi
 
-  git show `git log -n 1 --skip $1 --pretty=format:"%H"`
+  git show `git log -n 1 --skip $1 --pretty=format:"%H"` $2
 
 }
 
@@ -362,5 +370,6 @@ function find_info() {
                 rm $f
         done
 }
+
 
 [ `uname` = Darwin ] && darwin
