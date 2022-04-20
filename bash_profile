@@ -133,7 +133,6 @@ export ctags='/usr/local/Cellar/ctags/5.8_1/bin/ctags'
 export LDFLAGS="-L/usr/local/opt/openssl/lib"
 export CPPFLAGS="-I/usr/local/opt/openssl/include"
 export PATH="/usr/local/opt/openssl/bin:$PATH"
-alias rscp='scp $QA20:/tmp/1.patch /tmp/1.patch && patch -p1 < /tmp/1.patch'
 export QA06='rahul.malik@10.30.6.206'
 export QA09='rahul.malik@10.30.6.209'
 export QA20='rahul.malik@10.30.7.20'
@@ -227,7 +226,7 @@ function sandbox() {
     export XC=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --loose_keyring-file-data=$SRC_DATADIR/key.key"
     export MO=" --gdb --loose-log-error-verbosity=3 --core-file --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --log-bin --log-slave-updates"
     export SRC=$HOME/MySQL/src/$BX
-    export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DWITH_ROCKSDB=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
+    export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
     alias cdd='cd $DATADIR'
     alias cdl='cd $LOGDIR'
     alias cds='cd $SRC'
@@ -242,8 +241,9 @@ function sandbox() {
     alias cdbl='cd $HOME/MySQL/src/$BX/bld'
     alias gc="git checkout"
     alias gp='git pull'
-    LSCP=$QA20
+    LSCP=$QAsatya
     alias lscp='git diff --cached > /tmp/1.patch && scp /tmp/1.patch $LSCP:/tmp'
+    alias rscp='scp $LSCP:/tmp/1.patch /tmp/1.patch && patch -p1 < /tmp/1.patch'
     alias ttp='git diff --cached > /tmp/1.patch'
     ulimit -c unlimited
 
@@ -272,6 +272,9 @@ function sandbox() {
     #options based on PXB
     if [ -z $BBX ] ; then
 	export PS1="{\[\e[32m\]\h\[\e[m\]\[\e[36m\] $BX \[\e[m\]\W}$"
+        if [ $bx = "p" ] ; then
+	  CMK=$CMK" -DWITH_TOKUDB=OFF -DWITH_ROCKSDB=OFF"
+	fi
     else
 	export PS1="{\[\e[32m\]\h\[\e[m\]\[\e[36m\] $BX $BBX \[\e[m\]\W}$"
 	if [ $ver = "7" ] ; then
@@ -293,7 +296,8 @@ function get_gca {
   fi
   cd $xb
   git fetch  $1 $2
-  git fetch $3 $3
+  git fetch $3 $4
+  git checkout $1/$2
   git show `git rev-list "$1/$2" ^"$3/$4" --first-parent --topo-order | tail -1`
 }
 
