@@ -28,7 +28,6 @@ elif [ -z $BX ]; then
 elif [ "st" = $1 ]; then
  $MYSQLD $MO --port $PORT 2>&1 | tee $LOGDIR/mysql_$BX.log & #to start server
 elif [ "init" = $1 ]; then
- n kill
  n clean
  $MYSQLD $MO --initialize-insecure 2>&1 | tee $LOGDIR/mysql_init_$BX.log #to start server
  n st &
@@ -41,8 +40,9 @@ elif [ "mkdir" = $1 ]; then
  mkdir -p $LOGDIR
  mkdir -p $DATADIR
 elif [ "kill" = $1 ]; then
-# modify code to only expected mysqld
+# todo modify code to only expected mysqld
  killall -9 mysqld
+ return 0;
 elif [ "con" = $1 ]; then
  $MYSQL --socket $SOCKET -uroot
 elif [ "bkp" = $1 ]; then
@@ -98,7 +98,8 @@ elif [ "bkp_res" = $1 ]; then
  n bkp && n inc && n kill && n copy_src && n prep && n prep_inc && n res
  #remake
 elif [ "rm" = $1 ]; then
-	cd $SRC/bld && ninja
+	cd $SRC/bld &&  cmake --build .
+	return;
 elif [ "make" = $1 ]; then
  if [ -z $2 ]; then
   CPK=$CMK
@@ -109,9 +110,8 @@ elif [ "make" = $1 ]; then
   return;
  fi
  cd $SRC
- git submodule init
- git submodule update
- rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -G Ninja -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. && ninja && ninja install &&  cd $SRC && cr
+ git submodule update --init --recursive
+ rm -rf $HOME/MySQL/build/$BX && rm -rf bld && mkdir bld && cd bld && cmake $CPK -G Ninja -DCMAKE_INSTALL_PREFIX=~/MySQL/build/$BX .. 2>&1 |tee $LOGDIR/cmake.log && cmake --build . 2>&1 | tee $LOGDIR/build.log && ninja install && rm -rf $SRC/compile_commands.json && ln -s $SRC/bld/compile_commands.json $SRC/compile_commands.json && cd $SRC && cr
 else
   sandbox $1
 fi
@@ -128,11 +128,10 @@ ctags --langmap=c++:+.ic --langmap=c++:+.i -L cscope.files
 
 #call macos related methods
 darwin() {
+eval "$(/opt/homebrew/bin/brew shellenv)"
 export ctags='/usr/local/Cellar/ctags/5.8_1/bin/ctags'
-#path for openssl
-export LDFLAGS="-L/usr/local/opt/openssl/lib"
-export CPPFLAGS="-I/usr/local/opt/openssl/include"
-export PATH="/usr/local/opt/openssl/bin:$PATH"
+export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib -L/opt/homebrew/opt/libgcrypt/lib -L/opt/homebrew/opt/libev/lib  -L/opt/homebrew/opt/zstd/lib "
+export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include -I/opt/homebrew/opt/libgcrypt/include -I /opt/homebrew/opt/libev/include -I /opt/homebrew/opt/zstd/include "
 export QA06='rahul.malik@10.30.6.206'
 export QA09='rahul.malik@10.30.6.209'
 export QA20='rahul.malik@10.30.7.20'
@@ -220,11 +219,12 @@ function sandbox() {
     fi
     export BOX=$1
     export SOCKET=/tmp/socket_$PORT.sock
+    export pt=" --socket $SOCKET  --tables 4 --threads 4 --no-partition-tables --no-temp-tables "
     export DATADIR=$HOME/MySQL/data/$BOX
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
-    export XC=" --target-dir=$DATADIR --core-file --user=root --socket $SOCKET --loose_keyring-file-data=$SRC_DATADIR/key.key"
-    export MO=" --gdb --loose-log-error-verbosity=3 --core-file --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --log-bin --log-slave-updates"
+    export XC=" --target-dir=$DATADIR --user=root --socket $SOCKET --loose_keyring-file-data=$SRC_DATADIR/key.key"
+    export MO=" --loose-log-error-verbosity=3 --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --log-bin --log-slave-updates --innodb_buffer_pool_size=4GB --loose_innodb_redo_log_capacity=1073741824"
     export SRC=$HOME/MySQL/src/$BX
     export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DCMAKE_EXPORT_COMPILE_COMMANDS=on'
     alias cdd='cd $DATADIR'
@@ -232,8 +232,8 @@ function sandbox() {
     alias cds='cd $SRC'
     BASEDIR=$HOME/MySQL/build/$BX
     alias cdm='cd ~/MySQL/build/$BX'
-    alias bo='cd ~/pstress && git clean -fdx && cmake -DBASEDIR=$BASEDIR -DMYSQL=ON . && make -j && cdp && ctags -R';
-    alias bp='cd ~/pstress  && git clean -fdx && cmake -DBASEDIR=$BASEDIR -DPERCONASERVER=ON . && make -j && cdp && ctags -R';
+    alias bo='git clean -fdx && cmake -DBASEDIR=$BASEDIR -DMYSQL=ON . && make -j &&  ctags -R';
+    alias bp='git clean -fdx && cmake -DBASEDIR=$BASEDIR -DPERCONASERVER=ON . && make -j && ctags -R';
     alias cdsm='cd ~/MySQL/src/$BX'
     alias cqa='cd ~/MySQL/percona-qa'
     alias cdsx='cd $SRC/storage/innobase/xtrabackup'
@@ -242,7 +242,7 @@ function sandbox() {
     alias gc="git checkout"
     alias gp='git pull'
     LSCP=$QAsatya
-    alias lscp='git diff --cached > /tmp/1.patch && scp /tmp/1.patch $LSCP:/tmp'
+    alias lscp='scp /tmp/1.patch $LSCP:/tmp'
     alias rscp='scp $LSCP:/tmp/1.patch /tmp/1.patch && patch -p1 < /tmp/1.patch'
     alias ttp='git diff --cached > /tmp/1.patch'
     ulimit -c unlimited
@@ -278,7 +278,7 @@ function sandbox() {
     else
 	export PS1="{\[\e[32m\]\h\[\e[m\]\[\e[36m\] $BX $BBX \[\e[m\]\W}$"
 	if [ $ver = "7" ] ; then
-	 alias cdt='cd $HOME/MySQL/build/$BX/xtrabackup-test'
+	 alias cdt='cd $HOME/MySQL/build/$BX/xtrabackup-test/test'
         else
         export PATH=$PATH":$HOME/MySQL/src/$BX/bld/runtime_output_directory"
 	 alias cdt='cd $HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/test'
@@ -311,9 +311,11 @@ function create_wt {
   BRANCH=$2
   BUG="$1-$2-$3"
   if [ -z $4 ]; then
+	  echo "executing without commit_id"
   cd $xb && git fetch $REPO $BRANCH && git worktree add -b $BUG ../$BUG $REPO/$BRANCH  && cd ../$BUG
   else
-  cd $xb && git fetch $REPO $BRANCH && git worktree add -b $BUG ../$BUG $4  && cd ../$BUG
+	  echo "executing with commit_id"
+  cd $xb && git fetch $REPO $BRANCH && git worktree add -b $BUG ../$BUG $4^  && cd ../$BUG
   fi
 }
 
@@ -342,6 +344,17 @@ function git_push {
   fi
 }
 
+function git_merge_branch {
+  if [ -z $1 ]; then
+	  echo git_merge_branch pxb-2.4-1234
+	  return
+  fi
+  git merge $1 -s ours --no-commit
+  tap
+  git commit --all
+}
+
+
 function git_show {
   if [ -z $1 ]; then
 	  echo git_show last commit
@@ -351,11 +364,38 @@ function git_show {
   git show `git log -n 1 --skip $1 --pretty=format:"%H"` $2
 
 }
+function git_link(){
+	cd $SRC
+	remote="https://github.com"
+	if [ -z $1 ]; then
+		echo "get_link tag file line"
+		return
+	fi
+	if [ -z $BBX ]; then 
+		if [[ $BX == "o"* ]]; then
+		  remote="${remote}/mysql/mysql-server/blob"
+	        else
+			remote="${remote}/percona/percona-server/blob"
+		fi
+	else
+		remote="${remote}/percona/percona-xtrabackup/blob"
+	fi
+	full_path=$(find . -name $2)
+	remote="${remote}/""$1/$2#L$3"
+	echo "link is $remote"
+	return
+
+}
+
 
 # find the information of page
 #example find_info INPUT_FILE MAX_BLOCK BLOCK_SIZE
 #example find_info t1.ibd 12 2048
 function find_info() {
+  if [ -z $1 ]; then
+          echo "find_info t1.ibd 12 2048"
+	  return
+  fi
         max=$2
         for i in `seq 0 $max`
         do
@@ -375,5 +415,14 @@ function find_info() {
         done
 }
 
+copy_sandbox() {
+  if [ -z $1 ]; then
+          echo "copy_sandbox o2"
+	  return
+  fi
+	old_sandbox=$1
+	rm -rf $DATADIR && cp -r $HOME/MYSQL/data/$old_sandbox $DATADIR
+
+}
 
 [ `uname` = Darwin ] && darwin

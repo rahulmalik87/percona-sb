@@ -4,6 +4,8 @@ git clone git@github.com:akopytov/sysbench.git
 ulimit -n
 
 sysbench $HOME/MySQL/src/sysbench/src/lua/oltp_insert.lua --mysql-socket=$SOCKET --mysql-user=root --mysql-db=test --tables=400 --table-size=100000 --threads=200 prepare
-sysbench $HOME/MySQL/src/sysbench/src/lua/oltp_insert.lua --mysql-socket=$SOCKET --mysql-user=root --mysql-db=test --tables=5000 --table-size=100000 --threads=200 run --timea
+
+sysbench $HOME/MySQL/src/sysbench/src/lua/oltp_insert_only.lua --mysql-socket=$SOCKET --mysql-user=root --mysql-db=test --tables=5000 --table-size=100000 --threads=200 run --time=100
+
 
 
