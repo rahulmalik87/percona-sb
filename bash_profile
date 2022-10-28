@@ -4,7 +4,7 @@ BBX="" #if set means, running with backup directory:w
 PORT=""
 #global alias
 alias tap='patch -p1 < /tmp/1.patch'
-alias csc='cdsm && cscope -i ./cscope.files'
+alias csc='cscope -i ./cscope.files'
 alias gs='git status'
 alias cdp='cd ~/pstress/src'
 alias gpc='git push -f -u origin `echo $(basename $PWD)`' #git push current
@@ -86,7 +86,7 @@ elif [ "prep_inc" = $1 ]; then
 elif [ "copy_src" = $1 ]; then
  rm $LOGDIR/src_data_bkp.zip
  mv $LOGDIR/src_data.zip $LOGDIR/src_data_bkp.zip
- cd $HOME/MySQL/data && zip -r $LOGDIR/src_data.zip $BBX #copy source data directory rm -r $SRC_DATADIR
+ cd $HOME/MySQL/data && zip -r $LOGDIR/src_data.zip $BBX --exclude $BBX/\#innodb_redo/*tmp #copy source data directory rm -r $SRC_DATADIR
  cp $SRC_DATADIR/key.key $LOGDIR
 elif [ "res" = $1 ]; then
  n copy_src && n res_only
@@ -100,6 +100,18 @@ elif [ "bkp_res" = $1 ]; then
 elif [ "rm" = $1 ]; then
 	cd $SRC/bld &&  cmake --build .
 	return;
+elif [ "clone" = $1 ]; then
+  if [ -z $2 ]; then 
+    echo "n clone --branch=mysql-8.0.31"
+    echo "you can also set DEPTH, DEPTH=30 && n clone --branch=mysql-8.0.31"
+    return
+  fi
+  if [ -z $DEPTH ]; then
+    DEPTH=7
+  fi
+  rm -rf $SRC
+  git clone $REMOTE --depth $DEPTH $SRC $2 --single-branch
+
 elif [ "make" = $1 ]; then
  if [ -z $2 ]; then
   CPK=$CMK
@@ -120,7 +132,7 @@ fi
 #test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
 
 cr() {
-find . -path ./bld -prune -o \( -name \*.i -o -name \*.ic -o -name \*.h -o -name \*.c -o -name \*.cc -o -name \*.yy -o -name \*.ll -o -name \*.y -o -name \*.I -o -name \*.cpp -o -name \*.txt \) > cscope.files
+find . -path ./bld -prune -o \( -name \*.i -o -name \*.ic -o -name \*.h -o -name \*.c -o -name \*.cc -o -name \*.yy -o -name \*.ll -o -name \*.y -o -name \*.I -o -name \*.cpp -o -name \*.txt -o -name \*.hpp \) > cscope.files
 ctags --langmap=c++:+.ic --langmap=c++:+.i -L cscope.files
 \cscope -i ./cscope.files
 }
@@ -130,8 +142,8 @@ ctags --langmap=c++:+.ic --langmap=c++:+.i -L cscope.files
 darwin() {
 eval "$(/opt/homebrew/bin/brew shellenv)"
 export ctags='/usr/local/Cellar/ctags/5.8_1/bin/ctags'
-export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib -L/opt/homebrew/opt/libgcrypt/lib -L/opt/homebrew/opt/libev/lib  -L/opt/homebrew/opt/zstd/lib "
-export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include -I/opt/homebrew/opt/libgcrypt/include -I /opt/homebrew/opt/libev/include -I /opt/homebrew/opt/zstd/include "
+export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib -L/opt/homebrew/opt/libgcrypt/lib -L/opt/homebrew/opt/libev/lib  -L/opt/homebrew/opt/zstd/lib -L/opt/homebrew/opt/zlib/lib "
+export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include -I/opt/homebrew/opt/libgcrypt/include -I /opt/homebrew/opt/libev/include -I /opt/homebrew/opt/zstd/include -I/opt/homebrew/opt/zlib/include "
 export QA06='rahul.malik@10.30.6.206'
 export QA09='rahul.malik@10.30.6.209'
 export QA20='rahul.malik@10.30.7.20'
@@ -232,8 +244,6 @@ function sandbox() {
     alias cds='cd $SRC'
     BASEDIR=$HOME/MySQL/build/$BX
     alias cdm='cd ~/MySQL/build/$BX'
-    alias bo='git clean -fdx && cmake -DBASEDIR=$BASEDIR -DMYSQL=ON . && make -j &&  ctags -R';
-    alias bp='git clean -fdx && cmake -DBASEDIR=$BASEDIR -DPERCONASERVER=ON . && make -j && ctags -R';
     alias cdsm='cd ~/MySQL/src/$BX'
     alias cqa='cd ~/MySQL/percona-qa'
     alias cdsx='cd $SRC/storage/innobase/xtrabackup'
@@ -287,6 +297,16 @@ function sandbox() {
 	 alias lnb='cdt && rm -rf server && ln -s  $HOME/MySQL/build/$BBX server'
     fi;
     n mkdir
+	REMOTE="https://github.com"
+	if [ -z $BBX ]; then 
+	  if [[ $BX == "o"* ]]; then
+	    REMOTE="${REMOTE}/mysql/mysql-server"
+	  else
+	    REMOTE="${REMOTE}/percona/percona-server"
+	  fi
+	else
+	  REMOTE="${REMOTE}/percona/percona-xtrabackup"
+	fi
 }
 
 function get_gca {
@@ -366,22 +386,12 @@ function git_show {
 }
 function git_link(){
 	cd $SRC
-	remote="https://github.com"
 	if [ -z $1 ]; then
 		echo "get_link tag file line"
 		return
 	fi
-	if [ -z $BBX ]; then 
-		if [[ $BX == "o"* ]]; then
-		  remote="${remote}/mysql/mysql-server/blob"
-	        else
-			remote="${remote}/percona/percona-server/blob"
-		fi
-	else
-		remote="${remote}/percona/percona-xtrabackup/blob"
-	fi
 	full_path=$(find . -name $2)
-	remote="${remote}/""$1/$2#L$3"
+	local remote="${remote}/blob/""$1/$2#L$3"
 	echo "link is $remote"
 	return
 
@@ -422,6 +432,35 @@ copy_sandbox() {
   fi
 	old_sandbox=$1
 	rm -rf $DATADIR && cp -r $HOME/MYSQL/data/$old_sandbox $DATADIR
+
+}
+
+
+bp() {
+  if [ -z $BX ] ; then
+	  echo "use sandbox"
+	  return
+  fi
+
+  if [  $BBX ] ; then
+	  echo "use ps/ms sandbox"
+	  return
+  fi
+
+  local PCMK; 
+  if [ $m_version == "oracle" ]; then 
+    PCMK=" -DMYSQL=ON"
+  elif [ $m_version == "ps" ];  then
+    PCMK=" -DPERCONASERVER=ON"
+  fi
+  if [ ! `ls -d pstress` ]; then  
+    echo "not in pstress source "
+    return 
+  fi
+
+  rm -rf bld  && mkdir bld && cd bld
+  cmake .. -DBASEDIR=$BASEDIR $PCMK -DCMAKE_EXPORT_COMPILE_COMMANDS=on -DCMAKE_BUILD_TYPE=Debug && make -j 
+  cd .. && rm -rf compile_commands.json && ln -s bld/compile_commands.json .
 
 }
 
