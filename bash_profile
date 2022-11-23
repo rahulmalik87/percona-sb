@@ -1,4 +1,5 @@
-
+HISTSIZE=10000
+HISTFILESIZE=10000
 BX=""
 BBX="" #if set means, running with backup directory:w
 PORT=""
@@ -26,10 +27,10 @@ if [ -z $1 ]; then
 elif [ -z $BX ]; then
   sandbox $1
 elif [ "st" = $1 ]; then
- $MYSQLD $MO --port $PORT 2>&1 | tee $LOGDIR/mysql_$BX.log & #to start server
+ $MD $MO --port $PORT 2>&1 | tee $LOGDIR/mysql_$BX.log & #to start server
 elif [ "init" = $1 ]; then
  n clean
- $MYSQLD $MO --initialize-insecure 2>&1 | tee $LOGDIR/mysql_init_$BX.log #to start server
+ $MD $MO --initialize-insecure 2>&1 | tee $LOGDIR/mysql_init_$BX.log #to start server
  n st &
 elif [ "clean" = $1 ]; then
  echo "cleaning direcotry $LOGDIR and $DATADIR"
@@ -110,6 +111,7 @@ elif [ "clone" = $1 ]; then
     DEPTH=7
   fi
   rm -rf $SRC
+  cd $HOME
   git clone $REMOTE --depth $DEPTH $SRC $2 --single-branch
 
 elif [ "make" = $1 ]; then
@@ -150,6 +152,7 @@ export QA20='rahul.malik@10.30.7.20'
 export QA02='rahul.malik@10.30.6.202'
 export QA03='rahul.malik@10.30.6.203'
 export QAsatya='rahul.malik@10.30.3.209'
+export QAp='rahul.malik@10.30.7.117'
 export QAmanish='rahul.malik@10.30.6.61'
 export md5sum='md5'
 }
@@ -256,11 +259,12 @@ function sandbox() {
     alias rscp='scp $LSCP:/tmp/1.patch /tmp/1.patch && patch -p1 < /tmp/1.patch'
     alias ttp='git diff --cached > /tmp/1.patch'
     ulimit -c unlimited
+    ulimit -n4000
 
      #opition based on mysql version 5.7 or 8.0
     if [ $ver = "7" ] ; then
       export MYSQL_HOME=$HOME/MySQL/build/$BX
-      export MYSQLD=$HOME/MySQL/src/$BX/bld/sql/mysqld
+      export MD=$HOME/MySQL/src/$BX/bld/sql/mysqld
       export MYSQL=$HOME/MySQL/src/$BX/bld/client/mysql
       export XB=$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/src/xtrabackup
       MO=$MO" --basedir=$MYSQL_HOME"
@@ -269,7 +273,7 @@ function sandbox() {
     else
       export MYSQL_HOME=$HOME/MySQL/src/$BX/bld/runtime_output_directory
       export MYSQL=$MYSQL_HOME/mysql
-      export MYSQLD=$MYSQL_HOME/mysqld
+      export MD=$MYSQL_HOME/mysqld
       export XB=$MYSQL_HOME/xtrabackup
       MO=$MO" --loose_mysqlx_port=$PORT --loose_mysqlx_socket=/tmp/mysqx_`expr $PORT - 50`.sock  --loose_mysqlx_port=`expr $PORT - 50` --basedir=$MYSQL_HOME --plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory "
       XC=$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory"
