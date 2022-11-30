@@ -391,12 +391,12 @@ function git_show {
 function git_link(){
 	cd $SRC
 	if [ -z $1 ]; then
-		echo "get_link tag file line"
+		echo "git_link tag file line"
 		return
 	fi
 	full_path=$(find . -name $2)
-	local remote="${remote}/blob/""$1/$2#L$3"
-	echo "link is $remote"
+	local link="${REMOTE}/blob/""$1/$2#L$3"
+	echo "link is $link"
 	return
 
 }

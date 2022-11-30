@@ -16,7 +16,7 @@ git mere msyql-8.0.23
 "how to delete worktree"
 BUG=PXB-8.0-null-merge && git worktree remove  $BUG --force && git branch -D $BUG 
 
-"merge to upper and lower branch together:
+#merge to upper and lower branch together:
 git merge PXB-2.4. -s ours
 patch -p1 < /tmp/patch
 git add *
@@ -31,11 +31,10 @@ git merge pxb-2.4- -s ours
 BUG=PXB-8.0-null-merge && git fetch pxb 8.0 && `echo  git worktree add -b $BUG ../$BUG pxb/8.0` && cd ../$BUG && git fetch pxb 2.4 && git merge pxb/2.4  -s ours && git push rahul-pxb `basename $PWD`
 
 
-cherry pick commit from lower branch
+#cherry pick commit from lower branch
 git cherry-pick -x $COMMIT
 
 create null pull request add comment and merge. 
-
 cd $xb
 git worktree remove PXB-8.0-null-merge
 git branch -D PXB-8.0-null-merge
@@ -43,4 +42,21 @@ git branch -D PXB-8.0-null-merge
 to create pull request in 2.4
 
 BUG=PXB-2.4-id && git fetch pxb 2.4 && `echo  git worktree add -b $BUG ../$BUG pxb/2.4` && cd ../$BUG
+
+#how to drop commit
+git rebase HEAD~N -i
+select drop option
+
+#how to edit old commit
+git stash
+git rebase -i HEAD~N
+replace pick with e on relevant commit
+git stash pop
+git add <file>
+git commit --amend --no-edit
+git rebase --continue
+
+#how to fetch branch on vpn
+git fetch origin pxb-8.0-2886-1 --depth=1
+gc origin/pxb-8.0-2886-1
 
