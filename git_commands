@@ -47,7 +47,7 @@ BUG=PXB-2.4-id && git fetch pxb 2.4 && `echo  git worktree add -b $BUG ../$BUG p
 git rebase HEAD~N -i
 select drop option
 
-#how to edit old commit
+#how to add files to old commit
 git stash
 git rebase -i HEAD~N
 replace pick with e on relevant commit
@@ -60,3 +60,4 @@ git rebase --continue
 git fetch origin pxb-8.0-2886-1 --depth=1
 gc origin/pxb-8.0-2886-1
 
+#how to revert changes of one file from a commit
