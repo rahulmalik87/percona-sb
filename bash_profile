@@ -168,6 +168,7 @@ print_space_id_low() {
                 # else
                 echo "file name $i"
                 od -j34 -N4 -t x1 -An "$i"
+		$ID $i |grep se_private_id
                 # fi
         done
 }
@@ -275,6 +276,7 @@ function sandbox() {
       export MYSQL_HOME=$HOME/MySQL/src/$BX/bld/runtime_output_directory
       export MYSQL=$MYSQL_HOME/mysql
       export MD=$MYSQL_HOME/mysqld
+      export ID=$MYSQL_HOME/ibd2sdi
       export XB=$MYSQL_HOME/xtrabackup
       MO=$MO" --loose_mysqlx_port=$PORT --loose_mysqlx_socket=/tmp/mysqx_`expr $PORT - 50`.sock  --loose_mysqlx_port=`expr $PORT - 50` --basedir=$MYSQL_HOME --plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory "
       XC=$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory"

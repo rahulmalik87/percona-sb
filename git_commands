@@ -6,12 +6,14 @@ BUG=pstress-78 && git fetch pxb master && `echo  git worktree add -b $BUG ../$BU
 
 git push origin `basename $PWD` -f
 
-git pull --rebase 8.0
 
-merge pxb 
-cd $xb && git fetch pxb && git worktree add -b PXB-8023-merge ../PS-8023-merge pxb/8.0
+create_wt pxb 8.0 jira_number
 git fetch mysql-server
-git mere msyql-8.0.23
+git merge mysql-8.0.23
+
+#If you want to merge some changes to 8.0
+git merge pxb/8.0
+
 
 "how to delete worktree"
 BUG=PXB-8.0-null-merge && git worktree remove  $BUG --force && git branch -D $BUG 
@@ -61,3 +63,7 @@ git fetch origin pxb-8.0-2886-1 --depth=1
 gc origin/pxb-8.0-2886-1
 
 #how to revert changes of one file from a commit
+
+#how to rename PXB worktree.
+Physically rename the directory
+git  branch -m new_name

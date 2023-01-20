@@ -4,10 +4,10 @@ git clone git@github.com:akopytov/sysbench.git
 ulimit -n
 
 cd $HOME/MySQL/src/sysbench/src/lua
-sysbench oltp_insert.lua --mysql-socket=$SOCKET --mysql-user=root --mysql-db=test --tables=4 --table-size=100 --threads=10 prepare
+sysbench oltp_update_non_index.lua --mysql-socket=$SOCKET --mysql-user=root --mysql-db=test --tables=400 --table-size=10000 --threads=100 prepare
 
 cd $HOME/MySQL/src/sysbench/src/lua
-sysbench oltp_insert.lua --mysql-socket=$SOCKET --mysql-user=root --mysql-db=test --tables=4 --table-size=100 --threads=10 run --time=100
+sysbench oltp_update_non_index.lua --mysql-socket=$SOCKET --mysql-user=root --mysql-db=test --tables=4 --table-size=100 --threads=10 run --time=100
 
 
 
