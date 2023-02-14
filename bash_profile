@@ -152,6 +152,7 @@ export QA20='rahul.malik@10.30.7.20'
 export QA02='rahul.malik@10.30.6.202'
 export QA03='rahul.malik@10.30.6.203'
 export QAsatya='rahul.malik@10.30.3.209'
+export QA205='rahul.malik@10.30.3.205'
 export QAfast='rahul.malik@10.30.7.117'
 export QAp='rahul.malik@10.30.7.117'
 export QAmanish='rahul.malik@10.30.6.61'
@@ -295,7 +296,7 @@ function sandbox() {
     else
 	export PS1="{\[\e[32m\]\h\[\e[m\]\[\e[36m\] $BX $BBX \[\e[m\]\W}$"
 	if [ $ver = "7" ] ; then
-	 alias cdt='cd $HOME/MySQL/build/$BX/xtrabackup-test/test'
+	 alias cdt='cd $HOME/MySQL/build/$BX/xtrabackup-test'
         else
         export PATH=$PATH":$HOME/MySQL/src/$BX/bld/runtime_output_directory"
 	 alias cdt='cd $HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/test'
