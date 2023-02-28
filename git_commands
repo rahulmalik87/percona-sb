@@ -67,3 +67,6 @@ gc origin/pxb-8.0-2886-1
 #how to rename PXB worktree.
 Physically rename the directory
 git  branch -m new_name
+
+
+# how to clone complete repo after 

@@ -100,6 +100,9 @@ elif [ "bkp_res" = $1 ]; then
  #remake
 elif [ "rm" = $1 ]; then
 	cd $SRC/bld &&  cmake --build .
+	if [ $ver = "7" ] ; then
+		ninja install
+	fi
 	return;
 elif [ "clone" = $1 ]; then
   if [ -z $2 ]; then 
@@ -129,6 +132,7 @@ elif [ "make" = $1 ]; then
 else
   sandbox $1
 fi
+alias cdt='cd $TEST_PATH'
 }
 
 #test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
@@ -257,7 +261,7 @@ function sandbox() {
     alias cdbl='cd $HOME/MySQL/src/$BX/bld'
     alias gc="git checkout"
     alias gp='git pull'
-    LSCP=$QAsatya
+    LSCP=$QA20
     alias lscp='scp /tmp/1.patch $LSCP:/tmp'
     alias rscp='scp $LSCP:/tmp/1.patch /tmp/1.patch && patch -p1 < /tmp/1.patch'
     alias ttp='git diff --cached > /tmp/1.patch'
@@ -282,7 +286,7 @@ function sandbox() {
       MO=$MO" --loose_mysqlx_port=$PORT --loose_mysqlx_socket=/tmp/mysqx_`expr $PORT - 50`.sock  --loose_mysqlx_port=`expr $PORT - 50` --basedir=$MYSQL_HOME --plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory "
       XC=$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory"
     fi
-      alias cdt='cd $HOME/MySQL/src/$BX/bld/mysql-test'
+      export TEST_PATH="$HOME/MySQL/src/$BX/bld/mysql-test"
       export MYSQL_o8=$HOME/MySQL/src/o8/bld/runtime_output_directory/mysql
       alias cdb='$MYSQL  --socket $SOCKET -uroot -e "create database test;"'
       alias dt='$MYSQL_o8  --socket $SOCKET -uroot test'
@@ -296,10 +300,10 @@ function sandbox() {
     else
 	export PS1="{\[\e[32m\]\h\[\e[m\]\[\e[36m\] $BX $BBX \[\e[m\]\W}$"
 	if [ $ver = "7" ] ; then
-	 alias cdt='cd $HOME/MySQL/build/$BX/xtrabackup-test'
+	 export TEST_PATH="$HOME/MySQL/build/$BX/xtrabackup-test"
         else
         export PATH=$PATH":$HOME/MySQL/src/$BX/bld/runtime_output_directory"
-	 alias cdt='cd $HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/test'
+	 export TEST_PATH="$HOME/MySQL/src/$BX/bld/storage/innobase/xtrabackup/test"
 	fi
 	 #link box
 	 alias lnb='cdt && rm -rf server && ln -s  $HOME/MySQL/build/$BBX server'
@@ -470,6 +474,14 @@ bp() {
   cmake .. -DBASEDIR=$BASEDIR $PCMK -DCMAKE_EXPORT_COMPILE_COMMANDS=on -DCMAKE_BUILD_TYPE=Debug && make -j 
   cd .. && rm -rf compile_commands.json && ln -s bld/compile_commands.json .
 
+}
+
+rt() {
+	if [ -z $1 ]; then
+		echo "build and run test, rt t/test_name.sh"
+		return
+	fi
+	n rm && cd $TEST_PATH && ./run.sh -t $1
 }
 
 [ `uname` = Darwin ] && darwin
