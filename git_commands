@@ -70,3 +70,4 @@ git  branch -m new_name
 
 
 # how to clone complete repo after 
+git pull --unshallow

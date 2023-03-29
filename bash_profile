@@ -246,7 +246,7 @@ function sandbox() {
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
     export XC=" --target-dir=$DATADIR --user=root --socket $SOCKET --loose_keyring-file-data=$SRC_DATADIR/key.key"
-    export MO=" --loose-log-error-verbosity=3 --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --log-bin --log-slave-updates --innodb_buffer_pool_size=4GB --loose_innodb_redo_log_capacity=1073741824"
+    export MO=" --no-defaults --loose-log-error-verbosity=3 --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --log-bin --log-slave-updates --innodb_buffer_pool_size=4GB --loose_innodb_redo_log_capacity=1073741824 "
     export SRC=$HOME/MySQL/src/$BX
     export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DCMAKE_EXPORT_COMPILE_COMMANDS=on -DWITH_ZLIB=bundled'
     alias cdd='cd $DATADIR'
@@ -483,5 +483,10 @@ rt() {
 	fi
 	n rm && cd $TEST_PATH && ./run.sh -t $1
 }
+
+delete_git_waste() {
+	find ./ -type f \( -iname \*.orig -o -iname \*.rej \)  -exec rm {} \;
+}
+
 
 [ `uname` = Darwin ] && darwin
