@@ -52,7 +52,7 @@ elif [ "bkp" = $1 ]; then
  else
   rm -r $DATADIR*
   mkdir $DATADIR
-  $XB $XC --backup 2>&1 | tee $LOGDIR/backup_$BX.log
+  $XB $XC --datadir=$SRC_DATADIR --backup 2>&1 | tee $LOGDIR/backup_$BX.log
   grep "completed OK!" $LOGDIR/backup_$BX.log -c
  fi
 elif [ "inc" = $1 ]; then
